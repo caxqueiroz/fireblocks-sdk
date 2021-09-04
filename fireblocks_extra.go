@@ -152,6 +152,12 @@ type TransactionDetails struct {
 
 }
 
+type AddressStatus struct {
+	IsValid     bool `json:"isValid"`
+	IsActive    bool `json:"isActive"`
+	RequiresTag bool `json:"requiresTag"`
+}
+
 type SignedMessage struct {
 	Content        string                 `json:"content"`        // The message for signing (hex-formatted)
 	Algorithm      string                 `json:"algorithm"`      // The algorithm that was used for signing, one of the SigningAlgorithms
