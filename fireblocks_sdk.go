@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"github.com/shopspring/decimal"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -207,7 +208,7 @@ func (s *SDK) GetSupportedAssets() (string, error) {
 }
 
 // GetVaultAccounts - gets all vault accounts for the tenant.
-func (s *SDK) GetVaultAccounts(namePrefix string, nameSuffix string, minAmountThreshold float32) (string, error) {
+func (s *SDK) GetVaultAccounts(namePrefix string, nameSuffix string, minAmountThreshold decimal.Decimal) (string, error) {
 
 	query := "/v1/vault/accounts"
 	params := url.Values{}
@@ -218,7 +219,7 @@ func (s *SDK) GetVaultAccounts(namePrefix string, nameSuffix string, minAmountTh
 	if nameSuffix != "" {
 		params.Add("nameSuffix", nameSuffix)
 	}
-	if minAmountThreshold > 0 {
+	if minAmountThreshold.GreaterThan(decimal.NewFromFloat(0.0)) {
 		params.Add("nameSuffix", fmt.Sprintf("%f", minAmountThreshold))
 	}
 	if len(params) > 0 {
@@ -435,12 +436,12 @@ func (s *SDK) CreateInternalWalletAsset(
 
 // CreateTransaction -
 func (s *SDK) CreateTransaction(
-	assetId string, amount float64, source TransferPeerPath,
-	destination DestinationTransferPeerPath, fee float64, gasPrice float32, waitForStatus bool,
+	assetId string, amount decimal.Decimal, source TransferPeerPath,
+	destination DestinationTransferPeerPath, fee decimal.Decimal, gasPrice decimal.Decimal, waitForStatus bool,
 	txType TransactionType, note string, cpuStaking string, networkStaking string,
 	autoStaking string,
 	customerRefId string, extraParams ExtraParameters, destinations []DestinationTransferPeerPath,
-	feeLevel FeeLevel, failOnFee bool, maxFee string, gasLimit float32,
+	feeLevel FeeLevel, failOnFee bool, maxFee string, gasLimit decimal.Decimal,
 	replaceTxByHash string, idempotencyKey string,
 ) (CreateTransactionResponse, error) {
 
@@ -453,7 +454,7 @@ func (s *SDK) CreateTransaction(
 		"operation":     txType,
 	}
 
-	if fee > 0 {
+	if fee.IsPositive()  {
 		payload["fee"] = fee
 	}
 
@@ -467,11 +468,11 @@ func (s *SDK) CreateTransaction(
 		payload["maxFee"] = maxFee
 	}
 
-	if gasPrice > 0 {
+	if gasPrice.IsPositive() {
 		payload["gasPrice"] = gasPrice
 	}
 
-	if gasLimit > 0 {
+	if gasLimit.IsPositive() {
 		payload["gasLimit"] = gasLimit
 	}
 
@@ -564,9 +565,22 @@ func (s *SDK) GetVaultBalanceByAsset(assetId string) (string, error) {
 // ValidateAddress - validates the address of a given asset.
 // assetId - the id of the asset to validate the address
 // address - the address to validate
-func (s *SDK) ValidateAddress(assetId string, address string) (string, error) {
+func (s *SDK) ValidateAddress(assetId string, address string) (AddressStatus, error) {
 	query := fmt.Sprintf("/v1/transactions/validate_address/%s/%s", assetId, address)
-	return s.getRequest(query)
+
+	returnedData, err := s.getRequest(query)
+	if err != nil {
+		log.Error(err)
+		return AddressStatus{}, err
+	}
+	var addressStatus AddressStatus
+	err = json.Unmarshal([]byte(returnedData), &addressStatus)
+	if err != nil {
+		log.Error(err)
+		return AddressStatus{}, err
+	}
+
+	return addressStatus, nil
 }
 
 // GetTransactionById - get the transaction details

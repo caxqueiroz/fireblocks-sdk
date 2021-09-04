@@ -115,7 +115,7 @@ type TransactionDetails struct {
 	AssetId                       string                   `json:"AssetId"`
 	Source                        TransferPeerPathResponse `json:"source"`                        // source of the transaction
 	Destination                   TransferPeerPathResponse `json:"destination"`                   // Destination of the transaction
-	RequestedAmount               float64                  `json:"RequestedAmount"`               // the amount requested by the user
+	RequestedAmount               decimal.Decimal                  `json:"RequestedAmount"`               // the amount requested by the user
 	AmountInfo                    AmountInfo               `json:"amountInfo"`                    // Details of the transaction's amount in string format
 	FeeInfo                       FeeInfo                  `json:"feeInfo"`                       // Details of the transaction's fee in string format
 	Amount                        decimal.Decimal          `json:"amount"`                        // If the transfer is a withdrawal from an exchange, the actual amount that was requested to be transferred. Otherwise, the requested amount
