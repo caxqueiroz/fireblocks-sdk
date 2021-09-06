@@ -330,6 +330,22 @@ func (s *SDK) GetExchangeAccountAsset(exchangeID string, assetID string) (string
 	return s.getRequest(query)
 }
 
+func (s *SDK) SetCustomerRefId(vaultAccountId string, customerRefId string, idempotencyKey string) error {
+
+	payload := map[string]interface{}{
+		"customerRefId": customerRefId,
+	}
+	query := fmt.Sprintf("/v1/vault/accounts/%s", vaultAccountId)
+	_, err := s.changeRequest(query, payload, idempotencyKey, http.MethodPost)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return nil
+
+}
+
 // CreateVaultAccount
 // name - vaultaccount name - usually we use as a join of userid + product_id (XXXX_YYYY)
 func (s *SDK) CreateVaultAccount(
@@ -454,7 +470,7 @@ func (s *SDK) CreateTransaction(
 		"operation":     txType,
 	}
 
-	if fee.IsPositive()  {
+	if fee.IsPositive() {
 		payload["fee"] = fee
 	}
 
