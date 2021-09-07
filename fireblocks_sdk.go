@@ -232,9 +232,28 @@ func (s *SDK) GetVaultAccounts(namePrefix string, nameSuffix string, minAmountTh
 
 // GetVaultAccount - retrieve the vault account for the specified id.
 
-func (s *SDK) GetVaultAccount(vaultAccountID string) (string, error) {
+func (s *SDK) GetVaultAccount(vaultAccountID string) (VaultAccount, error) {
+
 	query := fmt.Sprintf("/v1/vault/accounts/%s", vaultAccountID)
-	return s.getRequest(query)
+
+	returnedData, err := s.getRequest(query)
+	if err != nil {
+		return VaultAccount{}, err
+	}
+
+	var vaultAccount VaultAccount
+	err = json.Unmarshal([]byte(returnedData), &vaultAccount)
+	if err != nil {
+		log.Error(err)
+		return VaultAccount{}, err
+	}
+
+	if vaultAccount.Id == "" {
+		return VaultAccount{}, errors.New(returnedData)
+	}
+
+	return vaultAccount, err
+
 }
 
 // GetVaultAccountAsset - Gets a single vault account asset
