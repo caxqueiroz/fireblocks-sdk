@@ -286,7 +286,7 @@ func (s *SDK) GetUnspentInputs(vaultAccountID string, assetID string) (string, e
 func (s *SDK) GenerateNewAddress(
 	vaultAccountID string, assetID string, description string, customerRefID string,
 	idempotencyKey string,
-) (string, error) {
+) (CreateAddressResponse, error) {
 	query := fmt.Sprintf("/v1/vault/accounts/%s/%s/addresses", vaultAccountID, assetID)
 
 	payload := make(map[string]interface{})
@@ -298,7 +298,21 @@ func (s *SDK) GenerateNewAddress(
 		payload["customerRefId"] = customerRefID
 	}
 
-	return s.changeRequest(query, payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest(query, payload, idempotencyKey, http.MethodPost)
+	if err != nil {
+		log.Error(err)
+		return CreateAddressResponse{}, err
+	}
+
+	var createdAddress CreateAddressResponse
+	err = json.Unmarshal([]byte(returnedData), &createdAddress)
+
+	if err != nil {
+		log.Error(err)
+		return CreateAddressResponse{}, err
+	}
+
+	return createdAddress, nil
 
 }
 

@@ -4,6 +4,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type CreateAddressResponse struct {
+	Address       string `json:"address"`       //Address of the asset in a Vault Account, for BTC/LTC the address is in Segwit (Bech32) format, cash address format for BCH
+	LegacyAddress string `json:"legacyAddress"` // Legacy address format for BTC/LTC/BCH
+	Tag           string `json:"tag"`           // Destination tag for XRP, used as memo for EOS/XLM
+}
+
 type ExtraParameters struct {
 	ContractCallData string `json:"contractCallData"`
 }
@@ -115,7 +121,7 @@ type TransactionDetails struct {
 	AssetId                       string                   `json:"AssetId"`
 	Source                        TransferPeerPathResponse `json:"source"`                        // source of the transaction
 	Destination                   TransferPeerPathResponse `json:"destination"`                   // Destination of the transaction
-	RequestedAmount               decimal.Decimal                  `json:"RequestedAmount"`               // the amount requested by the user
+	RequestedAmount               decimal.Decimal          `json:"RequestedAmount"`               // the amount requested by the user
 	AmountInfo                    AmountInfo               `json:"amountInfo"`                    // Details of the transaction's amount in string format
 	FeeInfo                       FeeInfo                  `json:"feeInfo"`                       // Details of the transaction's fee in string format
 	Amount                        decimal.Decimal          `json:"amount"`                        // If the transfer is a withdrawal from an exchange, the actual amount that was requested to be transferred. Otherwise, the requested amount
@@ -148,7 +154,7 @@ type TransactionDetails struct {
 	ExternalTxId                  string                   `json:"externalTxId"`                  // Unique transaction ID provided by the user
 	Destinations                  []DestinationsResponse   `json:"destinations"`                  // For UTXO based assets, all outputs specified here
 	SignedMessages                []SignedMessage          `json:"signedMessages"`                // A list of signed messages returned for raw signing
-	ExtraParameters               map[string]interface{}          `json:"extraParameters"`               // Protocol / operation specific parameters.
+	ExtraParameters               map[string]interface{}   `json:"extraParameters"`               // Protocol / operation specific parameters.
 
 }
 
@@ -327,8 +333,8 @@ const (
 type SigningAlgorithm string
 
 const (
-	MPC_ECDSA_SECP256K1 SigningAlgorithm = "MPC_ECDSA_SECP256K1"
-	MPC_EDDSA_ED25519                    = "MPC_EDDSA_ED25519"
+	MpcEcdsaSecp256k1 SigningAlgorithm = "MPC_ECDSA_SECP256K1"
+	MpcEddsaEd25519                    = "MPC_EDDSA_ED25519"
 )
 
 type FeeLevel string
@@ -342,12 +348,12 @@ const (
 type TransactionType string
 
 const (
-	TransactionTransfer              TransactionType = "TRANSFER"
-	TransactionMint                                  = "MINT"
-	TransactionBurn                                  = "BURN"
-	TRANSACTION_SUPPLY_TO_COMPOUND                   = "SUPPLY_TO_COMPOUND"
-	TRANSACTION_REDEEM_FROM_COMPOUND                 = "REDEEM_FROM_COMPOUND"
-	RAW                                              = "RAW"
-	ContractCall                                     = "CONTRACT_CALL"
-	ONE_TIME_ADDRESS                                 = "ONE_TIME_ADDRESS"
+	TransactionTransfer           TransactionType = "TRANSFER"
+	TransactionMint                               = "MINT"
+	TransactionBurn                               = "BURN"
+	TransactionSupplyToCompound                   = "SUPPLY_TO_COMPOUND"
+	TransactionRedeemFromCompound                 = "REDEEM_FROM_COMPOUND"
+	RAW                                           = "RAW"
+	ContractCall                                  = "CONTRACT_CALL"
+	ONE_TIME_ADDRESS                              = "ONE_TIME_ADDRESS"
 )
