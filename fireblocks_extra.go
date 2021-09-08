@@ -48,25 +48,25 @@ type ErrorMessage struct {
 type TransactionStatus string
 
 const (
-	TransactionStatusSubmitted                    TransactionStatus = "SUBMITTED"
-	TransactionStatusQueued                                         = "QUEUED"
-	TRANSACTION_PENDING_SIGNATURE                                   = "PENDING_SIGNATURE"
-	TRANSACTION_PENDING_AUTHORIZATION                               = "PENDING_AUTHORIZATION"
-	TRANSACTION_PENDING_3RD_PARTY_MANUAL_APPROVAL                   = "PENDING_3RD_PARTY_MANUAL_APPROVAL"
-	TRANSACTION_PENDING_3RD_PARTY                                   = "PENDING_3RD_PARTY"
-	TRANSACTION_PENDING                                             = "PENDING" // Deprecated
-	TRANSACTION_BROADCASTING                                        = "BROADCASTING"
-	TRANSACTION_CONFIRMING                                          = "CONFIRMING"
-	TRANSACTION_CONFIRMED                                           = "CONFIRMED" // Deprecated
-	TRANSACTION_COMPLETED                                           = "COMPLETED"
-	TRANSACTION_PENDING_AML_CHECKUP                                 = "PENDING_AML_CHECKUP"
-	TRANSACTION_PARTIALLY_COMPLETED                                 = "PARTIALLY_COMPLETED"
-	TRANSACTION_CANCELLING                                          = "CANCELLING"
-	TRANSACTION_CANCELLED                                           = "CANCELLED"
-	TRANSACTION_REJECTED                                            = "REJECTED"
-	TRANSACTION_FAILED                                              = "FAILED"
-	TRANSACTION_TIMEOUT                                             = "TIMEOUT"
-	TRANSACTION_BLOCKED                                             = "BLOCKED"
+	TransactionStatusSubmitted               TransactionStatus = "SUBMITTED"
+	TransactionStatusQueued                                    = "QUEUED"
+	TransactionPendingSignature                                = "PENDING_SIGNATURE"
+	TransactionPendingAuthorization                            = "PENDING_AUTHORIZATION"
+	TransactionPending3rdPartyManualApproval                   = "PENDING_3RD_PARTY_MANUAL_APPROVAL"
+	TransactionPending3rdParty                                 = "PENDING_3RD_PARTY"
+	TransactionPending                                         = "PENDING" // Deprecated
+	TransactionBroadcasting                                    = "BROADCASTING"
+	TransactionConfirming                                      = "CONFIRMING"
+	TransactionConfirmed                                       = "CONFIRMED" // Deprecated
+	TransactionCompleted                                       = "COMPLETED"
+	TransactionPendingAmlCheckup                               = "PENDING_AML_CHECKUP"
+	TransactionPartiallyCompleted                              = "PARTIALLY_COMPLETED"
+	TransactionCancelling                                      = "CANCELLING"
+	TransactionCancelled                                       = "CANCELLED"
+	TransactionRejected                                        = "REJECTED"
+	TransactionFailed                                          = "FAILED"
+	TransactionTimeout                                         = "TIMEOUT"
+	TransactionBlocked                                         = "BLOCKED"
 )
 
 type TransactionSubStatus string
@@ -230,7 +230,7 @@ const (
 	BROADCASTING               = "BROADCASTING"
 	CONFIRMING                 = "CONFIRMING"
 	FAILED                     = "FAILED"
-	NS_CONFIRMED               = "CONFIRMED"
+	NsConfirmed                = "CONFIRMED"
 )
 
 type AmlScreeningResult struct {
@@ -374,12 +374,12 @@ const (
 type TransactionType string
 
 const (
-	TransactionTransfer           TransactionType = "TRANSFER"
-	TransactionMint                               = "MINT"
-	TransactionBurn                               = "BURN"
-	TransactionSupplyToCompound                   = "SUPPLY_TO_COMPOUND"
-	TransactionRedeemFromCompound                 = "REDEEM_FROM_COMPOUND"
-	RAW                                           = "RAW"
-	ContractCall                                  = "CONTRACT_CALL"
-	ONE_TIME_ADDRESS                              = "ONE_TIME_ADDRESS"
+	TxTransfer            TransactionType = "TRANSFER"
+	TxMint                                = "MINT"
+	TxBurn                                = "BURN"
+	TxSupplyToCompound                    = "SUPPLY_TO_COMPOUND"
+	TxnRedeemFromCompound                 = "REDEEM_FROM_COMPOUND"
+	TxRaw                                 = "RAW"
+	TxContractCall                        = "CONTRACT_CALL"
+	TxOneTimeAddress                      = "ONE_TIME_ADDRESS"
 )
