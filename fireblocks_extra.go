@@ -4,6 +4,25 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type ExternalWalletAsset struct {
+	Id             string                    `json:"id"`             // the id of the asset
+	Status         ConfigChangeRequestStatus `json:"status"`         // Status of the External Wallet
+	ActivationTime string                    `json:"activationTime"` // The time the wallet will be activated in case wallets activation posponed according to workspace definition
+	Address        string                    `json:"address"`        // The address of the wallet
+	Tag            string                    `json:"tag"`            // Destination tag (for XRP, used as memo for EOS/XLM) of the wallet, for SEN/Signet used as Bank Transfer Description
+
+}
+
+type ConfigChangeRequestStatus string
+
+const (
+	WaitingForApproval ConfigChangeRequestStatus = "WAITING_FOR_APPROVAL"
+	Approved                                     = "APPROVED"
+	Cancelled                                    = "CANCELLED"
+	Rejected                                     = "REJECTED"
+	Failed                                       = "FAILED"
+)
+
 type CreateAddressResponse struct {
 	Address       string `json:"address"`       //Address of the asset in a Vault Account, for BTC/LTC the address is in Segwit (Bech32) format, cash address format for BCH
 	LegacyAddress string `json:"legacyAddress"` // Legacy address format for BTC/LTC/BCH

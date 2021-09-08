@@ -455,7 +455,37 @@ func (s *SDK) CreateExternalWallet(name string, customerRefId string, idempotenc
 	return s.changeRequest("/v1/external_wallets", payload, idempotencyKey, http.MethodPost)
 }
 
-//CreateInternalWalletAsset
+func (s *SDK) CreateExternalWalletAsset(walletId string, assetId string, address string, tag string, idempotencyKey string) (ExternalWalletAsset, error) {
+
+	cmd := fmt.Sprintf("/v1/external_wallets/%s/%s", walletId, assetId)
+
+	payload := map[string]interface{}{
+		"address": address,
+	}
+
+	if len(tag) > 0 {
+		payload["tag"] = tag
+	}
+
+	returnedData, err := s.changeRequest(cmd, payload, idempotencyKey, http.MethodPost)
+	if err != nil {
+		log.Error(err)
+		return ExternalWalletAsset{}, err
+	}
+	var extWalletAsset ExternalWalletAsset
+
+	err = json.Unmarshal([]byte(returnedData), &extWalletAsset)
+	if err != nil {
+		log.Error(err)
+		return ExternalWalletAsset{}, err
+	}
+
+	return extWalletAsset, nil
+
+}
+
+//CreateInternalWallet
+
 func (s *SDK) CreateInternalWallet(name string, customerRefId string, idempotencyKey string) (string, error) {
 
 	payload := map[string]interface{}{
@@ -467,10 +497,9 @@ func (s *SDK) CreateInternalWallet(name string, customerRefId string, idempotenc
 }
 
 // CreateInternalWalletAsset
-func (s *SDK) CreateInternalWalletAsset(
-	walletId string, assetId string, address string,
-	tag string, idempotencyKey string,
-) (string, error) {
+
+func (s *SDK) CreateInternalWalletAsset(walletId string, assetId string, address string, tag string, idempotencyKey string) (string, error) {
+
 	cmd := fmt.Sprintf("/v1/internal_wallets/%s/%s", walletId, assetId)
 	payload := map[string]interface{}{
 		"address": address,
