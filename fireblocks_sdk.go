@@ -445,14 +445,30 @@ func (s *SDK) CreateVaultAsset(
 
 // CreateExternalWallet
 // customerRefId - used for identifying our clients.
-func (s *SDK) CreateExternalWallet(name string, customerRefId string, idempotencyKey string) (string, error) {
+func (s *SDK) CreateExternalWallet(name string, customerRefId string, idempotencyKey string) (ExternalWallet, error) {
 
 	payload := map[string]interface{}{
-		"name":          name,
-		"customerRefId": customerRefId,
+		"name": name,
+	}
+	if len(customerRefId) > 0 {
+		payload["customerRefId"] = customerRefId
 	}
 
-	return s.changeRequest("/v1/external_wallets", payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest("/v1/external_wallets", payload, idempotencyKey, http.MethodPost)
+	if err != nil {
+		log.Error(err)
+		return ExternalWallet{}, err
+	}
+
+	var externalWallet ExternalWallet
+	err = json.Unmarshal([]byte(returnedData), &externalWallet)
+	if err != nil {
+		log.Error(err)
+		return ExternalWallet{}, err
+	}
+
+	return externalWallet, nil
+
 }
 
 func (s *SDK) CreateExternalWalletAsset(walletId string, assetId string, address string, tag string, idempotencyKey string) (ExternalWalletAsset, error) {

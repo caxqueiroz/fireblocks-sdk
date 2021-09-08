@@ -13,6 +13,13 @@ type ExternalWalletAsset struct {
 
 }
 
+type ExternalWallet struct {
+	Id            string                `json:"id"`                      //The ID of the Unmanaged Wallet
+	Name          string                `json:"name"`                    // Name of the Wallet Container
+	CustomerRefId string                `json:"customerRefId,omitempty"` //[optional] The ID for AML providers to associate the owner of funds with transactions
+	Assets        []ExternalWalletAsset `json:"assets"`                  //Array of the assets available in the exteral wallet
+}
+
 type ConfigChangeRequestStatus string
 
 const (
@@ -287,7 +294,7 @@ type OneTimeAddress struct {
 }
 
 type TransferPeerPathResponse struct {
-	TransferType string `json:"type"` //[ VAULT_ACCOUNT, EXCHANGE_ACCOUNT, INTERNAL_WALLET, EXTERNAL_WALLET, ONE_TIME_ADDRESS, NETWORK_CONNECTION, FIAT_ACCOUNT, COMPOUND ]
+	TransferType string `json:"type"` //[ PTVaultAccount, EXCHANGE_ACCOUNT, INTERNAL_WALLET, EXTERNAL_WALLET, ONE_TIME_ADDRESS, NETWORK_CONNECTION, FIAT_ACCOUNT, COMPOUND ]
 	Id           string `json:"id"`   // The ID of the exchange account to return
 	Name         string `json:"name"` // The name of the exchange account
 	Subtype      string `json:"subType"`
@@ -330,14 +337,14 @@ type VaultAsset struct {
 type PeerType string
 
 const (
-	VAULT_ACCOUNT     PeerType = "VAULT_ACCOUNT"
-	ExchangeAccount            = "EXCHANGE_ACCOUNT"
-	InternalWallet             = "INTERNAL_WALLET"
-	ExternalWallet             = "EXTERNAL_WALLET"
-	UnknownPeer                = "UNKNOWN"
-	FiatAccount                = "FIAT_ACCOUNT"
-	NetworkConnection          = "NETWORK_CONNECTION"
-	COMPOUND                   = "COMPOUND"
+	PTVaultAccount      PeerType = "VAULT_ACCOUNT"
+	PTExchangeAccount            = "EXCHANGE_ACCOUNT"
+	PTInternalWallet             = "INTERNAL_WALLET"
+	PTExternalWallet             = "EXTERNAL_WALLET"
+	PTUnknownPeer                = "UNKNOWN"
+	PTFiatAccount                = "FIAT_ACCOUNT"
+	PTNetworkConnection          = "NETWORK_CONNECTION"
+	PTCompound                   = "COMPOUND"
 )
 
 type AssetType string
