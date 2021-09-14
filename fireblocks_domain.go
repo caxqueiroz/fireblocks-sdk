@@ -355,6 +355,41 @@ type VaultAsset struct {
 	PendingRefundNetwork string `json:"pendingRefundNetwork"`
 }
 
+type AssetAddedData struct {
+	AccountId   string `json:"accountId"`   // The ID of the vault account under which the wallet was added
+	TenantId    string `json:"tenantId"`    // Unique id of your Fireblocks' workspace
+	AccountName string `json:"accountName"` // The name of the vault account under which the wallet was added
+	AssetId     string `json:"assetId"`     // Wallet's asset
+}
+
+type WalletAssetWebhook struct {
+	AssetId        string `json:"assetId"`        // Wallet's asset
+	Id             string `json:"id"`             // The ID of the wallet
+	Name           string `json:"name"`           // The name of wallet
+	Address        string `json:"address"`        // The address of the wallet
+	Tag            string `json:"tag"`            //Destination tag (for XRP, used as memo for EOS/XLM and as Bank Transfer Description for Signet/SEN) of the wallet
+	ActivationTime string `json:"activationTime"` // The time the wallet will be activated in case wallets activation posponed according to workspace definition
+
+}
+
+type ThirdPartyWebhook struct {
+	Id      string `json:"id"`      // Id of the thirdparty account on the Fireblocks platform
+	SubType string `json:"subType"` // Subtype of the third party, ie. exchange or fiat name
+	Name    string `json:"name"`    // Account name
+}
+
+type ObjectAdded struct {
+	Type      string      `json:"type"`
+	TenantId  string      `json:"tenantId"`
+	Timestamp int64       `json:"timestamp"`
+	Data      interface{} `json:"data"`
+}
+
+type ExternalWalletAssetAdded ObjectAdded
+type ExchangeAccountAdded ObjectAdded
+type FiatAccountAdded ObjectAdded
+type NetworkConnectionAdded ObjectAdded
+
 type PeerType string
 
 const (
@@ -380,15 +415,15 @@ const (
 type EventType string
 
 const (
-	TransactionCreated       EventType = "TRANSACTION_CREATED"
-	TransactionStatusUpdated           = "TRANSACTION_STATUS_UPDATED"
-	VaultAccountAdded                  = "VAULT_ACCOUNT_ADDED"
-	VaultAccountAssetAdded             = "VAULT_ACCOUNT_ASSET_ADDED"
-	InternalWalletAssetAdded           = "INTERNAL_WALLET_ASSET_ADDED"
-	ExternalWalletAssetAdded           = "EXTERNAL_WALLET_ASSET_ADDED"
-	ExchangeAccountAdded               = "EXCHANGE_ACCOUNT_ADDED"
-	FiatAccountAdded                   = "FIAT_ACCOUNT_ADDED"
-	NetworkConnectionAdded             = "NETWORK_CONNECTION_ADDED"
+	EventTransactionCreated       EventType = "TRANSACTION_CREATED"
+	EventTransactionStatusUpdated           = "TRANSACTION_STATUS_UPDATED"
+	EventVaultAccountAdded                  = "VAULT_ACCOUNT_ADDED"
+	EventVaultAccountAssetAdded             = "VAULT_ACCOUNT_ASSET_ADDED"
+	EventInternalWalletAssetAdded           = "INTERNAL_WALLET_ASSET_ADDED"
+	EventExternalWalletAssetAdded           = "EXTERNAL_WALLET_ASSET_ADDED"
+	EventExchangeAccountAdded               = "EXCHANGE_ACCOUNT_ADDED"
+	EventFiatAccountAdded                   = "FIAT_ACCOUNT_ADDED"
+	EventNetworkConnectionAdded             = "NETWORK_CONNECTION_ADDED"
 )
 
 type SigningAlgorithm string
