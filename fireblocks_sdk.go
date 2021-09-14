@@ -528,6 +528,36 @@ func (s *SDK) CreateInternalWalletAsset(walletId string, assetId string, address
 
 }
 
+//GetEstimateTxFee
+// Get the estimate fee for a tx.
+func (s *SDK) GetEstimateTxFee(assetId string, amount string, source TransferPeerPath, destination DestinationTransferPeerPath, operation TransactionOperation) (EstimatedTransactionFeeResponse, error) {
+
+	payload := map[string]interface{}{
+		"assetId":     assetId,
+		"amount":      amount,
+		"source":      source,
+		"destination": destination,
+		"operation":   operation,
+	}
+
+	returnedData, err := s.changeRequest("/v1/transactions/estimate_fee", payload, "", http.MethodPost)
+	if err != nil {
+		log.Error(err)
+		return EstimatedTransactionFeeResponse{}, err
+	}
+
+	var estimatedTxFee EstimatedTransactionFeeResponse
+
+	err = json.Unmarshal([]byte(returnedData), &estimatedTxFee)
+	if err != nil {
+		log.Error(err)
+		return EstimatedTransactionFeeResponse{}, err
+	}
+
+	return estimatedTxFee, nil
+
+}
+
 // CreateTransaction -
 func (s *SDK) CreateTransaction(
 	assetId string, amount decimal.Decimal, source TransferPeerPath,

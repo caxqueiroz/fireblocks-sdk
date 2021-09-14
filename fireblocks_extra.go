@@ -154,6 +154,7 @@ type TransactionDetails struct {
 	NetAmount                     decimal.Decimal          `json:"netAmount"`                     // The net amount of the transaction, after fee deduction
 	AmountUSD                     decimal.Decimal          `json:"amountUSD"`                     // The USD value of the requested amount
 	ServiceFee                    decimal.Decimal          `json:"ServiceFee"`                    // The total fee deducted by the exchange from the actual requested amount (serviceFee = amount - netAmount)
+	TreatAsGrossAmount            bool                     `json:"treatAsGrossAmount"`            // For outgoing transactions, if true, the network fee is deducted from the requested amount
 	NetworkFee                    decimal.Decimal          `json:"networkFee"`                    //The fee paid to the network
 	CreatedAt                     int64                    `json:"createdAt"`                     // Unix timestamp
 	LastUpdated                   int64                    `json:"lastUpdated"`                   // Unix timestamp
@@ -179,8 +180,28 @@ type TransactionDetails struct {
 	ReplacedTxHash                string                   `json:"replacedTxHash"`                // In case of an RBF transaction, the hash of the dropped transaction
 	ExternalTxId                  string                   `json:"externalTxId"`                  // Unique transaction ID provided by the user
 	Destinations                  []DestinationsResponse   `json:"destinations"`                  // For UTXO based assets, all outputs specified here
+	BlockInfo                     BlockInfo                `json:"blockInfo"`                     //The information of the block that this transaction was mined in, the blocks's hash and height
 	SignedMessages                []SignedMessage          `json:"signedMessages"`                // A list of signed messages returned for raw signing
 	ExtraParameters               map[string]interface{}   `json:"extraParameters"`               // Protocol / operation specific parameters.
+
+}
+
+type BlockInfo struct {
+	BlockHeight string `json:"blockHeight"`
+	BlockHash   string `json:"blockHash"`
+}
+
+type TransactionFee struct {
+	FeePerByte string `json:"feePerByte"` // [optional] For UTXOs,
+	GasPrice   string `json:"gasPrice"`   // [optional] For Ethereum assets (ETH and Tokens)
+	GasLimit   string ` json:"gasLimit"`  // [optional] For Ethereum assets (ETH and Tokens), the limit for how much can be used
+	NetworkFee string `json:"networkFee"` // [optional] Transaction fee
+}
+
+type EstimatedTransactionFeeResponse struct {
+	Low    TransactionFee `json:"low"`    //Transactions with this fee will probably take longer to be mined
+	Medium TransactionFee `json:"medium"` // Average transactions fee
+	High   TransactionFee `json:"high"`   //Transactions with this fee should be mined the fastest
 
 }
 
