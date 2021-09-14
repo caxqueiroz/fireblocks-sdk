@@ -377,6 +377,20 @@ const (
 	FIAT                = "FIAT"
 )
 
+type EventType string
+
+const (
+	TransactionCreated       EventType = "TRANSACTION_CREATED"
+	TransactionStatusUpdated           = "TRANSACTION_STATUS_UPDATED"
+	VaultAccountAdded                  = "VAULT_ACCOUNT_ADDED"
+	VaultAccountAssetAdded             = "VAULT_ACCOUNT_ASSET_ADDED"
+	InternalWalletAssetAdded           = "INTERNAL_WALLET_ASSET_ADDED"
+	ExternalWalletAssetAdded           = "EXTERNAL_WALLET_ASSET_ADDED"
+	ExchangeAccountAdded               = "EXCHANGE_ACCOUNT_ADDED"
+	FiatAccountAdded                   = "FIAT_ACCOUNT_ADDED"
+	NetworkConnectionAdded             = "NETWORK_CONNECTION_ADDED"
+)
+
 type SigningAlgorithm string
 
 const (
