@@ -310,9 +310,9 @@ func (s *SDK) GenerateNewAddress(
 
 	var createdAddress CreateAddressResponse
 	err = json.Unmarshal([]byte(returnedData), &createdAddress)
-
 	if err != nil {
 		log.Error(err)
+		log.Error("returned payload: %v", returnedData)
 		return CreateAddressResponse{}, err
 	}
 
