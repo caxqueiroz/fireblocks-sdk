@@ -120,6 +120,7 @@ func (s *SDK) getRequest(path string) (string, error) {
 	response, err := client.Do(request)
 	if err != nil {
 		log.Error(err)
+		return "", err
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -131,6 +132,7 @@ func (s *SDK) getRequest(path string) (string, error) {
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("Error communicating with Fireblocks: %v", err)
+		return "", err
 	}
 
 	if response.StatusCode >= 300 {
@@ -180,6 +182,7 @@ func (s *SDK) changeRequest(
 	response, err := client.Do(request)
 	if err != nil {
 		log.Error(err)
+		return "", err
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -191,6 +194,7 @@ func (s *SDK) changeRequest(
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("Error on communicating with Fireblocks: %v  \n data: %s", err, data)
+		return "", err
 	}
 
 	if response.StatusCode >= 300 {
