@@ -305,14 +305,14 @@ func (s *SDK) GenerateNewAddress(
 	returnedData, err := s.changeRequest(query, payload, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
+		log.Error("returned payload: %s", returnedData)
 		return CreateAddressResponse{}, err
 	}
 
 	var createdAddress CreateAddressResponse
 	err = json.Unmarshal([]byte(returnedData), &createdAddress)
 	if err != nil {
-		log.Error(err)
-		log.Error("returned payload: %v", returnedData)
+		log.Errorf("failed to parse payload: %s. %v", returnedData, err)
 		return CreateAddressResponse{}, err
 	}
 
