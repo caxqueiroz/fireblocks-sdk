@@ -274,10 +274,24 @@ func (s *SDK) GetVaultAccountAsset(vaultAccountID string, assetID string) (Vault
 
 }
 
-// GetDepositAddresses - Gets deposit addresses for an asset in a vault account
-func (s *SDK) GetDepositAddresses(vaultAccountID string, assetID string) (string, error) {
+// GetAddresses - Gets deposit addresses for an asset in a vault account
+func (s *SDK) GetAddresses(vaultAccountID string, assetID string) (VaultAccountAssetAddress, error) {
+
 	query := fmt.Sprintf("/v1/vault/accounts/%s/%s/addresses", vaultAccountID, assetID)
-	return s.getRequest(query)
+	returnedData, err := s.getRequest(query)
+	if err != nil {
+		return VaultAccountAssetAddress{}, err
+	}
+
+	var assetAddress VaultAccountAssetAddress
+	err = json.Unmarshal([]byte(returnedData), &assetAddress)
+	if err != nil {
+		log.Errorf("failed to parse payload: %s. %v", returnedData, err)
+		return VaultAccountAssetAddress{}, err
+	}
+
+	return assetAddress, nil
+
 }
 
 // GetUnspentInputs - Gets utxo list for an asset in a vault account

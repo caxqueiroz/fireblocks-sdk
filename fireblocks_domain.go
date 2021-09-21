@@ -297,6 +297,17 @@ type AssetTypeResponse struct {
 	ContractAddress string    `json:"contractAddress"`
 }
 
+type VaultAccountAssetAddress struct {
+	AssetId       string `json:"assetId"`        // The ID of the asset
+	Address       string `json:"address"`        // Address of the asset in a Vault Account, for BTC/LTC the address is in Segwit (Bech32) format, for BCH cash format
+	LegacyAddress string `json:"legacyAddress"`  // For BTC/LTC/BCH the legacy format address
+	Description   string `json:"description"`    // Description of the address
+	Tag           string `json:"tag"`            // Destination tag for XRP, used as memo for EOS/XLM, for Signet/SEN it is the Bank Transfer Description
+	Type          string `json:"type"`           // Address type
+	CustomerRefId string `json:" customerRefId"` // [optional] The ID for AML providers to associate the owner of funds with transactions
+
+}
+
 type UnsignedMessage struct {
 	Content           string `json:"content"`           //message to be signed - hex format.
 	Bip44AddressIndex int    `json:"bip44AddressIndex"` //
