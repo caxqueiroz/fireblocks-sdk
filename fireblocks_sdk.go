@@ -210,7 +210,7 @@ func (s *SDK) GetSupportedAssets() (string, error) {
 }
 
 // GetVaultAccounts - gets all vault accounts for the tenant.
-func (s *SDK) GetVaultAccounts(namePrefix string, nameSuffix string, minAmountThreshold decimal.Decimal) (string, error) {
+func (s *SDK) GetVaultAccounts(namePrefix string, nameSuffix string, minAmountThreshold decimal.Decimal) ([]VaultAccount, error) {
 
 	query := "/v1/vault/accounts"
 	params := url.Values{}
@@ -228,8 +228,18 @@ func (s *SDK) GetVaultAccounts(namePrefix string, nameSuffix string, minAmountTh
 		query = query + "?" + params.Encode()
 	}
 
-	return s.getRequest(query)
+	returnedData, err := s.getRequest(query)
+	if err != nil {
+		return nil, err
+	}
+	var vaultAccounts []VaultAccount
+	err = json.Unmarshal([]byte(returnedData), &vaultAccounts)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
 
+	return vaultAccounts, nil
 }
 
 // GetVaultAccount - retrieve the vault account for the specified id.
