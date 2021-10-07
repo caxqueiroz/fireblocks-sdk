@@ -222,7 +222,7 @@ func (s *SDK) GetVaultAccounts(namePrefix string, nameSuffix string, minAmountTh
 		params.Add("nameSuffix", nameSuffix)
 	}
 	if minAmountThreshold.GreaterThan(decimal.NewFromFloat(0.0)) {
-		params.Add("nameSuffix", fmt.Sprintf("%f", minAmountThreshold))
+		params.Add("minAmountThreshold", fmt.Sprintf("%f", minAmountThreshold))
 	}
 	if len(params) > 0 {
 		query = query + "?" + params.Encode()
