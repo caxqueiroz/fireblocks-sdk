@@ -333,13 +333,13 @@ type TransferPeerPathResponse struct {
 }
 
 type TransferPeerPath struct {
+	TPeerId   string   `json:"id"`
 	TPeerType PeerType `json:"type"`
-	TPeerId   string   `json:"Id"`
 }
 
 type DestinationTransferPeerPath struct {
+	TPeerId   string         `json:"id"`
 	TPeerType PeerType       `json:"type"`
-	TPeerId   string         `json:"Id"`
 	Ota       OneTimeAddress `json:"oneTimeAddress"`
 }
 
@@ -353,7 +353,7 @@ type VaultAccount struct {
 }
 
 type VaultAsset struct {
-	Id                   string `json:"Id"`
+	Id                   string `json:"id"`
 	Total                string `json:"total"`
 	Available            string `json:"available"`
 	Pending              string `json:"pending"`
@@ -365,6 +365,35 @@ type VaultAsset struct {
 	PendingRefundCPU     string `json:"pendingRefundCPU"`
 	PendingRefundNetwork string `json:"pendingRefundNetwork"`
 }
+
+type ExchangeAccount struct {
+	Id            string                    `json:"id"`
+	Type          ExchangeType              `json:"type"`
+	Name          string                    `json:"name"`
+	Status        ConfigChangeRequestStatus `json:"status"`
+	Assets        []ExchangeAsset           `json:"assets"`
+	IsSubAccount  bool                      `json:"isSubaccount"`
+	MainAccountId string                    `json:"mainAccountId"`
+}
+
+type TradingAccount struct {
+	Type   TradingAccountType `json:"type"`
+	Assets []ExchangeAsset    `json:"assets"`
+}
+
+type ExchangeAsset struct {
+	Id           string `json:"id"`
+	Total        string `json:"total"`
+	Available    string `json:"available"`
+	LockedAmount string `json:"lockedAmount"`
+	Balance      string `json:"balance"`
+}
+
+type ExchangeType struct {
+	Type string `json:"type"`
+}
+
+type TradingAccountType ExchangeType
 
 type AssetAddedData struct {
 	AccountId   string `json:"accountId"`   // The ID of the vault account under which the wallet was added

@@ -143,9 +143,7 @@ func (s *SDK) getRequest(path string) (string, error) {
 	return string(data), err
 }
 
-func (s *SDK) changeRequest(
-	path string, payload map[string]interface{}, idempotencyKey string, requestType string,
-) (string, error) {
+func (s *SDK) changeRequest(path string, payload map[string]interface{}, idempotencyKey string, requestType string) (string, error) {
 
 	client := &http.Client{}
 	urlEndPoint := s.apiBaseURL + path
@@ -262,6 +260,7 @@ func (s *SDK) GetVaultAccount(vaultAccountID string) (VaultAccount, error) {
 
 // GetVaultAccountAsset - Gets a single vault account asset
 func (s *SDK) GetVaultAccountAsset(vaultAccountID string, assetID string) (VaultAsset, error) {
+
 	query := fmt.Sprintf("/v1/vault/accounts/%s/%s", vaultAccountID, assetID)
 
 	var vaultAsset VaultAsset
@@ -269,7 +268,11 @@ func (s *SDK) GetVaultAccountAsset(vaultAccountID string, assetID string) (Vault
 	if err != nil {
 		log.Error(err)
 	}
-	json.Unmarshal([]byte(returnedData), &vaultAsset)
+	err = json.Unmarshal([]byte(returnedData), &vaultAsset)
+	if err != nil {
+		log.Errorf("failed to parse payload: %s. %v", returnedData, err)
+		return VaultAsset{}, err
+	}
 	return vaultAsset, err
 
 }
@@ -301,8 +304,7 @@ func (s *SDK) GetUnspentInputs(vaultAccountID string, assetID string) (string, e
 }
 
 // GenerateNewAddress - Generates a new address for an asset in a vault account
-func (s *SDK) GenerateNewAddress(
-	vaultAccountID string, assetID string, description string, customerRefID string,
+func (s *SDK) GenerateNewAddress(vaultAccountID string, assetID string, description string, customerRefID string,
 	idempotencyKey string,
 ) (CreateAddressResponse, error) {
 	query := fmt.Sprintf("/v1/vault/accounts/%s/%s/addresses", vaultAccountID, assetID)
@@ -335,10 +337,8 @@ func (s *SDK) GenerateNewAddress(
 }
 
 // SetAddressDescription - Sets the description of an existing address
-func (s *SDK) SetAddressDescription(
-	vaultAccountID string, assetID string, description string,
-	address string, tag string,
-) (string, error) {
+func (s *SDK) SetAddressDescription(vaultAccountID string, assetID string, description string, address string, tag string) (string, error) {
+
 	payload := make(map[string]interface{})
 
 	if len(description) > 0 {
@@ -365,20 +365,64 @@ func (s *SDK) GetNetworkConnectionByID(connectionID string) (string, error) {
 }
 
 // GetExchangeAccounts - Gets all exchange accounts for your tenant
-func (s *SDK) GetExchangeAccounts() (string, error) {
-	return s.getRequest("/v1/exchange_accounts")
+func (s *SDK) GetExchangeAccounts() ([]ExchangeAccount, error) {
+
+	returnedData, err := s.getRequest("/v1/exchange_accounts")
+	if err != nil {
+		log.Error(err)
+	}
+	var exchangeAccounts []ExchangeAccount
+	err = json.Unmarshal([]byte(returnedData), &exchangeAccounts)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return exchangeAccounts, nil
+
 }
 
 // GetExchangeAccount - Gets an exchange account for your tenant
-func (s *SDK) GetExchangeAccount(exchangeID string) (string, error) {
+func (s *SDK) GetExchangeAccount(exchangeID string) (ExchangeAccount, error) {
+
 	query := fmt.Sprintf("/v1/exchange_accounts/%s", exchangeID)
-	return s.getRequest(query)
+
+	returnedData, err := s.getRequest(query)
+	if err != nil {
+		log.Error(err)
+		return ExchangeAccount{}, err
+	}
+
+	var exchangeAccount ExchangeAccount
+	err = json.Unmarshal([]byte(returnedData), &exchangeAccount)
+	if err != nil {
+		log.Error(err)
+		return ExchangeAccount{}, err
+	}
+
+	return exchangeAccount, nil
+
 }
 
 // GetExchangeAccountAsset - Get a specific asset from an exchange account
-func (s *SDK) GetExchangeAccountAsset(exchangeID string, assetID string) (string, error) {
+func (s *SDK) GetExchangeAccountAsset(exchangeID string, assetID string) (ExchangeAsset, error) {
+
 	query := fmt.Sprintf("/v1/exchange_accounts/%s/%s", exchangeID, assetID)
-	return s.getRequest(query)
+
+	returnedData, err := s.getRequest(query)
+	if err != nil {
+		log.Error(err)
+		return ExchangeAsset{}, err
+	}
+
+	var exchangeAsset ExchangeAsset
+	err = json.Unmarshal([]byte(returnedData), &exchangeAsset)
+	if err != nil {
+		log.Error(err)
+		return ExchangeAsset{}, err
+	}
+
+	return exchangeAsset, nil
+
 }
 
 func (s *SDK) SetCustomerRefId(vaultAccountId string, customerRefId string, idempotencyKey string) error {
@@ -399,8 +443,7 @@ func (s *SDK) SetCustomerRefId(vaultAccountId string, customerRefId string, idem
 
 // CreateVaultAccount
 // name - vaultaccount name - usually we use as a join of userid + product_id (XXXX_YYYY)
-func (s *SDK) CreateVaultAccount(
-	name string, hiddenOnUI bool, customerRefID string, autoFuel bool, idempotencyKey string) (VaultAccount, error) {
+func (s *SDK) CreateVaultAccount(name string, hiddenOnUI bool, customerRefID string, autoFuel bool, idempotencyKey string) (VaultAccount, error) {
 
 	payload := map[string]interface{}{
 		"name":       name,
@@ -437,8 +480,7 @@ func (s *SDK) CreateVaultAccount(
 // args:
 //     vaultAccountId
 //     assetId
-func (s *SDK) CreateVaultAsset(
-	vaultAccountId string, assetId string, idempotencyKey string) (CreateVaultAssetResponse, error) {
+func (s *SDK) CreateVaultAsset(vaultAccountId string, assetId string, idempotencyKey string) (CreateVaultAssetResponse, error) {
 
 	cmd := fmt.Sprintf("/v1/vault/accounts/%s/%s", vaultAccountId, assetId)
 
@@ -708,6 +750,7 @@ func (s *SDK) GetVaultBalanceByAsset(assetId string) (string, error) {
 // assetId - the id of the asset to validate the address
 // address - the address to validate
 func (s *SDK) ValidateAddress(assetId string, address string) (AddressStatus, error) {
+
 	query := fmt.Sprintf("/v1/transactions/validate_address/%s/%s", assetId, address)
 
 	returnedData, err := s.getRequest(query)
@@ -728,6 +771,7 @@ func (s *SDK) ValidateAddress(assetId string, address string) (AddressStatus, er
 // GetTransactionById - get the transaction details
 // txId - transaction id
 func (s *SDK) GetTransactionById(txId string) (string, error) {
+
 	query := fmt.Sprintf("/v1/transactions/%s", txId)
 	return s.getRequest(query)
 }
