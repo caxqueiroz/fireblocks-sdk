@@ -20,6 +20,15 @@ type ExternalWallet struct {
 	Assets        []ExternalWalletAsset `json:"assets"`                  //Array of the assets available in the exteral wallet
 }
 
+type User struct {
+	Id        string `json:"id"`        // User ID on the Fireblocks platform
+	FirstName string `json:"firstName"` // First name
+	LastName  string `json:"lastName"`  // Last name
+	Role      string `json:"role"`      // The role of the user in the workspace
+	Email     string `json:"email"`     // The email of the user
+	Enabled   bool   `json:"enabled"`   //The status of the user in the workspace
+}
+
 type ConfigChangeRequestStatus string
 
 const (
@@ -293,8 +302,9 @@ type CreateVaultAssetResponse struct {
 type AssetTypeResponse struct {
 	Id              string    `json:"Id"`
 	Name            string    `json:"name"`
-	TypeAsset       AssetType `json:"typeAsset"`
+	TypeAsset       AssetType `json:"type"`
 	ContractAddress string    `json:"contractAddress"`
+	NativeAsset     string    `json:"nativeAsset"`
 }
 
 type VaultAccountAssetAddress struct {

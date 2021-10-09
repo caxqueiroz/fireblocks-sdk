@@ -18,6 +18,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -85,7 +86,8 @@ type SDK struct {
 }
 
 // NewInstance - create new type to handle Fireblocks API requests
-func NewInstance(pk []byte, apik string, url string) *SDK {
+func NewInstance(pk []byte, ak string, url string) *SDK {
+
 	s := new(SDK)
 	s.apiBaseURL = url
 	privateK, err := jwt.ParseRSAPrivateKeyFromPEM(pk)
@@ -93,7 +95,7 @@ func NewInstance(pk []byte, apik string, url string) *SDK {
 		log.Error(err)
 	}
 
-	s.kto = NewInstanceKeyMgmt(privateK, apik)
+	s.kto = NewInstanceKeyMgmt(privateK, ak)
 	return s
 }
 
@@ -136,8 +138,8 @@ func (s *SDK) getRequest(path string) (string, error) {
 	}
 
 	if response.StatusCode >= 300 {
-		err := errors.New(fmt.Sprintf("From Fireblocks server: %s \n", errors.New(response.Status)))
-		log.Warning(err)
+		errMsg := fmt.Sprintf("From Fireblocks server: %s \n %s", response.Status, string(data))
+		log.Warning(errMsg)
 	}
 
 	return string(data), err
@@ -196,17 +198,48 @@ func (s *SDK) changeRequest(path string, payload map[string]interface{}, idempot
 	}
 
 	if response.StatusCode >= 300 {
-		err := errors.New(fmt.Sprintf("From Fireblocks server: %s \n", errors.New(response.Status)))
-		log.Warningf("Error: %s", err)
+		errMsg := fmt.Sprintf("From Fireblocks server: %s \n %s", response.Status, string(data))
+		log.Warning(errMsg)
 	}
 
 	return string(data), err
 
 }
 
+func (s *SDK) GetUsers() ([]User, error) {
+
+	returnedData, err := s.getRequest("/v1/users")
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	var users []User
+	err = json.Unmarshal([]byte(returnedData), &users)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return users, nil
+}
+
 // GetSupportedAssets - Gets all assets that are currently supported by Fireblocks API.
-func (s *SDK) GetSupportedAssets() (string, error) {
-	return s.getRequest("/v1/supported_assets")
+func (s *SDK) GetSupportedAssets() ([]AssetTypeResponse, error) {
+
+	returnedData, err := s.getRequest("/v1/supported_assets")
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	var assetsTypeResponse []AssetTypeResponse
+	err = json.Unmarshal([]byte(returnedData), &assetsTypeResponse)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return assetsTypeResponse, nil
 }
 
 // GetVaultAccounts - gets all vault accounts for the tenant.
@@ -331,7 +364,7 @@ func (s *SDK) GenerateNewAddress(vaultAccountID string, assetID string, descript
 	returnedData, err := s.changeRequest(query, payload, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
-		log.Error("returned payload: %s", returnedData)
+		log.Errorf("returned payload: %s", returnedData)
 		return CreateAddressResponse{}, err
 	}
 
@@ -607,7 +640,7 @@ func (s *SDK) GetEstimateTxFee(assetId string, amount string, source TransferPee
 		"amount":      amount,
 		"source":      source,
 		"destination": destination,
-		"operation":   operation,
+		"operation":   operation.Operation,
 	}
 
 	returnedData, err := s.changeRequest("/v1/transactions/estimate_fee", payload, "", http.MethodPost)
@@ -616,8 +649,13 @@ func (s *SDK) GetEstimateTxFee(assetId string, amount string, source TransferPee
 		return EstimatedTransactionFeeResponse{}, err
 	}
 
-	var estimatedTxFee EstimatedTransactionFeeResponse
+	if strings.Contains(returnedData, "message") {
+		// {"message":"The asset is not supported by Fireblocks, please check the supported assets endpoint.","code":1025}
+		errMsg := fmt.Sprintf("Request failed: %s", returnedData)
+		return EstimatedTransactionFeeResponse{}, errors.New(errMsg)
+	}
 
+	var estimatedTxFee EstimatedTransactionFeeResponse
 	err = json.Unmarshal([]byte(returnedData), &estimatedTxFee)
 	if err != nil {
 		log.Error(err)
@@ -629,14 +667,12 @@ func (s *SDK) GetEstimateTxFee(assetId string, amount string, source TransferPee
 }
 
 // CreateTransaction -
-func (s *SDK) CreateTransaction(
-	assetId string, amount decimal.Decimal, source TransferPeerPath,
+func (s *SDK) CreateTransaction(assetId string, amount decimal.Decimal, source TransferPeerPath,
 	destination DestinationTransferPeerPath, fee decimal.Decimal, gasPrice decimal.Decimal, waitForStatus bool,
 	txType TransactionType, note string, cpuStaking string, networkStaking string,
-	autoStaking string,
-	customerRefId string, extraParams ExtraParameters, destinations []DestinationTransferPeerPath,
-	feeLevel FeeLevel, failOnFee bool, maxFee string, gasLimit decimal.Decimal,
-	replaceTxByHash string, idempotencyKey string,
+	autoStaking string, customerRefId string, extraParams ExtraParameters, destinations []DestinationTransferPeerPath,
+	feeLevel FeeLevel, failOnFee bool, maxFee string, gasLimit decimal.Decimal, replaceTxByHash string, idempotencyKey string,
+
 ) (CreateTransactionResponse, error) {
 
 	payload := map[string]interface{}{
@@ -711,13 +747,17 @@ func (s *SDK) CreateTransaction(
 		}
 	}
 
-	returnedData, err := s.changeRequest("/v1/transactions", payload, idempotencyKey,
-		http.MethodPost)
+	return s.CreateTransactionWithPayload(payload, idempotencyKey)
+}
 
-	var transactionResponse CreateTransactionResponse
+func (s *SDK) CreateTransactionWithPayload(payload map[string]interface{}, idempotencyKey string) (CreateTransactionResponse, error) {
+
+	returnedData, err := s.changeRequest("/v1/transactions", payload, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
 	}
+
+	var transactionResponse CreateTransactionResponse
 	err = json.Unmarshal([]byte(returnedData), &transactionResponse)
 	if err != nil {
 		log.Error(err)
@@ -780,17 +820,69 @@ func (s *SDK) ValidateAddress(assetId string, address string) (AddressStatus, er
 
 // GetTransactionById - get the transaction details
 // txId - transaction id
-func (s *SDK) GetTransactionById(txId string) (string, error) {
+func (s *SDK) GetTransactionById(txId string) (TransactionDetails, error) {
 
 	query := fmt.Sprintf("/v1/transactions/%s", txId)
-	return s.getRequest(query)
+	returnedData, err := s.getRequest(query)
+	if err != nil {
+		log.Error(err)
+		return TransactionDetails{}, err
+	}
+	var transactionDetails TransactionDetails
+	err = json.Unmarshal([]byte(returnedData), &transactionDetails)
+	if err != nil {
+		log.Error(err)
+		return TransactionDetails{}, err
+	}
+
+	return transactionDetails, nil
+
 }
 
-func (s *SDK) GetExternalWallets() (string, error) {
-	return s.getRequest("/v1/external_wallets")
+func (s *SDK) GetExternalWallets() ([]ExternalWallet, error) {
+
+	returnedData, err := s.getRequest("/v1/external_wallets")
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	var extWallets []ExternalWallet
+	err = json.Unmarshal([]byte(returnedData), &extWallets)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return extWallets, nil
+
 }
 
-func (s *SDK) GetExternalWallet(externalWalletId string) (string, error) {
+func (s *SDK) GetExternalWallet(externalWalletId string) (ExternalWallet, error) {
+
 	query := fmt.Sprintf("/v1/external_wallets/%s", externalWalletId)
-	return s.getRequest(query)
+
+	returnedData, err := s.getRequest(query)
+	if err != nil {
+		log.Error(err)
+		return ExternalWallet{}, err
+	}
+
+	extWallet, err2 := getExtWallet(returnedData)
+	if err2 != nil {
+		return ExternalWallet{}, err2
+	}
+
+	return extWallet, nil
+
+}
+
+func getExtWallet(returnedData string) (ExternalWallet, error) {
+	var extWallet ExternalWallet
+	err := json.Unmarshal([]byte(returnedData), &extWallet)
+	if err != nil {
+		log.Error(err)
+		return ExternalWallet{}, err
+	}
+	return extWallet, nil
 }
