@@ -300,11 +300,11 @@ type CreateVaultAssetResponse struct {
 }
 
 type AssetTypeResponse struct {
-	Id              string    `json:"Id"`
-	Name            string    `json:"name"`
-	TypeAsset       AssetType `json:"type"`
-	ContractAddress string    `json:"contractAddress"`
-	NativeAsset     string    `json:"nativeAsset"`
+	Id              string `json:"Id"`
+	Name            string `json:"name"`
+	AssetType       string `json:"type"`
+	ContractAddress string `json:"contractAddress"`
+	NativeAsset     string `json:"nativeAsset"`
 }
 
 type VaultAccountAssetAddress struct {
@@ -451,15 +451,6 @@ const (
 	PTFiatAccount                = "FIAT_ACCOUNT"
 	PTNetworkConnection          = "NETWORK_CONNECTION"
 	PTCompound                   = "COMPOUND"
-)
-
-type AssetType string
-
-const (
-	BaseAsset AssetType = "BASE_ASSET"
-	ETH                 = "ETH"
-	CONTRACT            = "CONTRACT"
-	FIAT                = "FIAT"
 )
 
 type EventType string
