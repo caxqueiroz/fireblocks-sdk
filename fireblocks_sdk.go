@@ -605,19 +605,31 @@ func (s *SDK) CreateExternalWalletAsset(walletId string, assetId string, address
 
 //CreateInternalWallet
 
-func (s *SDK) CreateInternalWallet(name string, customerRefId string, idempotencyKey string) (string, error) {
+func (s *SDK) CreateInternalWallet(name string, customerRefId string, idempotencyKey string) (UnmanagedWallet, error) {
 
 	payload := map[string]interface{}{
 		"name":          name,
 		"customerRefId": customerRefId,
 	}
 
-	return s.changeRequest("/v1/internal_wallets", payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest("/v1/internal_wallets", payload, idempotencyKey, http.MethodPost)
+	if err != nil {
+		log.Error(err)
+		return UnmanagedWallet{}, err
+	}
+	var unmanagedWallet UnmanagedWallet
+	err = json.Unmarshal([]byte(returnedData), &unmanagedWallet)
+	if err != nil {
+		log.Error(err)
+		return UnmanagedWallet{}, err
+	}
+
+	return unmanagedWallet, nil
 }
 
 // CreateInternalWalletAsset
 
-func (s *SDK) CreateInternalWalletAsset(walletId string, assetId string, address string, tag string, idempotencyKey string) (string, error) {
+func (s *SDK) CreateInternalWalletAsset(walletId string, assetId string, address string, tag string, idempotencyKey string) (WalletAsset, error) {
 
 	cmd := fmt.Sprintf("/v1/internal_wallets/%s/%s", walletId, assetId)
 	payload := map[string]interface{}{
@@ -627,20 +639,32 @@ func (s *SDK) CreateInternalWalletAsset(walletId string, assetId string, address
 		payload["tag"] = tag
 	}
 
-	return s.changeRequest(cmd, payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest(cmd, payload, idempotencyKey, http.MethodPost)
+	if err != nil {
+		log.Error(err)
+		return WalletAsset{}, err
+	}
+	var walletAsset WalletAsset
+	err = json.Unmarshal([]byte(returnedData), &walletAsset)
+	if err != nil {
+		log.Error(err)
+		return WalletAsset{}, err
+	}
+
+	return walletAsset, nil
 
 }
 
 //GetEstimateTxFee
 // Get the estimate fee for a tx.
-func (s *SDK) GetEstimateTxFee(assetId string, amount string, source TransferPeerPath, destination DestinationTransferPeerPath, operation TransactionOperation) (EstimatedTransactionFeeResponse, error) {
+func (s *SDK) GetEstimateTxFee(assetId string, amount string, source TransferPeerPath, destination DestinationTransferPeerPath, operation string) (EstimatedTransactionFeeResponse, error) {
 
 	payload := map[string]interface{}{
 		"assetId":     assetId,
 		"amount":      amount,
 		"source":      source,
 		"destination": destination,
-		"operation":   operation.Operation,
+		"operation":   operation,
 	}
 
 	returnedData, err := s.changeRequest("/v1/transactions/estimate_fee", payload, "", http.MethodPost)

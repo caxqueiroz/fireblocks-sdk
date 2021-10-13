@@ -20,6 +20,24 @@ type ExternalWallet struct {
 	Assets        []ExternalWalletAsset `json:"assets"`                  //Array of the assets available in the exteral wallet
 }
 
+type UnmanagedWallet struct {
+	Id            string
+	Name          string
+	CustomerRefId string
+	Assets        []WalletAsset
+}
+
+type WalletAsset struct {
+	Id             string                    `json:"id"`             // the id of the asset
+	Balance        string                    `json:"balance"`        // the balance of the wallet
+	LockedAmount   string                    `json:"lockedAmount"`   // locked amount in the wallet
+	Status         ConfigChangeRequestStatus `json:"status"`         // Status of the External Wallet
+	ActivationTime string                    `json:"activationTime"` // The time the wallet will be activated in case wallets activation posponed according to workspace definition
+	Address        string                    `json:"address"`        // The address of the wallet
+	Tag            string                    `json:"tag"`            // Destination tag (for XRP, used as memo for EOS/XLM) of the wallet, for SEN/Signet used as Bank Transfer Description
+
+}
+
 type User struct {
 	Id        string `json:"id"`        // User ID on the Fireblocks platform
 	FirstName string `json:"firstName"` // First name
@@ -81,74 +99,74 @@ const (
 type TransactionSubStatus string
 
 const (
-	INSUFFICIENT_FUNDS                 TransactionSubStatus = "INSUFFICIENT_FUNDS"
-	AMOUNT_TOO_SMALL                                        = "AMOUNT_TOO_SMALL"
-	UNSUPPORTED_ASSET                                       = "UNSUPPORTED_ASSET"
-	UNAUTHORISED__MISSING_PERMISSION                        = "UNAUTHORISED__MISSING_PERMISSION"
-	INVALID_SIGNATURE                                       = "INVALID_SIGNATURE"
-	API_INVALID_SIGNATURE                                   = "API_INVALID_SIGNATURE"
-	UNAUTHORISED__MISSING_CREDENTIALS                       = "UNAUTHORISED__MISSING_CREDENTIALS"
-	UNAUTHORISED__USER                                      = "UNAUTHORISED__USER"
-	UNAUTHORISED__DEVICE                                    = "UNAUTHORISED__DEVICE"
-	INVALID_UNMANAGED_WALLET                                = "INVALID_UNMANAGED_WALLET"
-	INVALID_EXCHANGE_ACCOUNT                                = "INVALID_EXCHANGE_ACCOUNT"
-	INSUFFICIENT_FUNDS_FOR_FEE                              = "INSUFFICIENT_FUNDS_FOR_FEE"
-	INVALID_ADDRESS                                         = "INVALID_ADDRESS"
-	WITHDRAW_LIMIT                                          = "WITHDRAW_LIMIT"
-	API_CALL_LIMIT                                          = "API_CALL_LIMIT"
-	ADDRESS_NOT_WHITELISTED                                 = "ADDRESS_NOT_WHITELISTED"
-	TIMEOUT                                                 = "TIMEOUT"
-	CONNECTIVITY_ERROR                                      = "CONNECTIVITY_ERROR"
-	THIRD_PARTY_INTERNAL_ERROR                              = "THIRD_PARTY_INTERNAL_ERROR"
-	CANCELLED_EXTERNALLY                                    = "CANCELLED_EXTERNALLY"
-	INVALID_THIRD_PARTY_RESPONSE                            = "INVALID_THIRD_PARTY_RESPONSE"
-	VAULT_WALLET_NOT_READY                                  = "VAULT_WALLET_NOT_READY"
-	MISSING_DEPOSIT_ADDRESS                                 = "MISSING_DEPOSIT_ADDRESS"
-	ONE_TIME_ADDRESS_DISABLED                               = "ONE_TIME_ADDRESS_DISABLED"
-	INTERNAL_ERROR                                          = "INTERNAL_ERROR"
-	UNKNOWN_ERROR                                           = "UNKNOWN_ERROR"
-	AUTHORIZER_NOT_FOUND                                    = "AUTHORIZER_NOT_FOUND"
-	INSUFFICIENT_RESERVED_FUNDING                           = "INSUFFICIENT_RESERVED_FUNDING"
-	MANUAL_DEPOSIT_ADDRESS_REQUIRED                         = "MANUAL_DEPOSIT_ADDRESS_REQUIRED"
-	INVALID_FEE                                             = "INVALID_FEE"
-	ERROR_UNSUPPORTED_TRANSACTION_TYPE                      = "ERROR_UNSUPPORTED_TRANSACTION_TYPE"
-	UNSUPPORTED_OPERATION                                   = "UNSUPPORTED_OPERATION"
-	T3RD_PARTY_PROCESSING                                   = "3RD_PARTY_PROCESSING"
-	PENDING_BLOCKCHAIN_CONFIRMATIONS                        = "PENDING_BLOCKCHAIN_CONFIRMATIONS"
-	T3RD_PARTY_CONFIRMING                                   = "3RD_PARTY_CONFIRMING"
-	CONFIRMED                                               = "CONFIRMED"
-	T3RD_PARTY_COMPLETED                                    = "3RD_PARTY_COMPLETED"
-	REJECTED_BY_USER                                        = "REJECTED_BY_USER"
-	CANCELLED_BY_USER                                       = "CANCELLED_BY_USER"
-	T3RD_PARTY_CANCELLED                                    = "3RD_PARTY_CANCELLED"
-	T3RD_PARTY_REJECTED                                     = "3RD_PARTY_REJECTED"
-	AML_SCREENING_REJECTED                                  = "AML_SCREENING_REJECTED"
-	BLOCKED_BY_POLICY                                       = "BLOCKED_BY_POLICY"
-	FAILED_AML_SCREENING                                    = "FAILED_AML_SCREENING"
-	PARTIALLY_FAILED                                        = "PARTIALLY_FAILED"
-	T3RD_PARTY_FAILED                                       = "3RD_PARTY_FAILED"
-	DROPPED_BY_BLOCKCHAIN                                   = "DROPPED_BY_BLOCKCHAIN"
-	TOO_MANY_INPUTS                                         = "TOO_MANY_INPUTS"
-	SIGNING_ERROR                                           = "SIGNING_ERROR"
-	INVALID_FEE_PARAMS                                      = "INVALID_FEE_PARAMS"
-	MISSING_TAG_OR_MEMO                                     = "MISSING_TAG_OR_MEMO"
-	GAS_LIMIT_TOO_LOW                                       = "GAS_LIMIT_TOO_LOW"
-	MAX_FEE_EXCEEDED                                        = "MAX_FEE_EXCEEDED"
-	ACTUAL_FEE_TOO_HIGH                                     = "ACTUAL_FEE_TOO_HIGH"
-	INVALID_CONTRACT_CALL_DATA                              = "INVALID_CONTRACT_CALL_DATA"
-	INVALID_NONCE_TOO_LOW                                   = "INVALID_NONCE_TOO_LOW"
-	INVALID_NONCE_TOO_HIGH                                  = "INVALID_NONCE_TOO_HIGH"
-	INVALID_NONCE_FOR_RBF                                   = "INVALID_NONCE_FOR_RBF"
-	FAIL_ON_LOW_FEE                                         = "FAIL_ON_LOW_FEE"
-	TOO_LONG_MEMPOOL_CHAIN                                  = "TOO_LONG_MEMPOOL_CHAIN"
-	TX_OUTDATED                                             = "TX_OUTDATED"
-	INCOMPLETE_USER_SETUP                                   = "INCOMPLETE_USER_SETUP"
-	SIGNER_NOT_FOUND                                        = "SIGNER_NOT_FOUND"
-	INVALID_TAG_OR_MEMO                                     = "INVALID_TAG_OR_MEMO"
-	ZERO_BALANCE_IN_PERMANENT_ADDRESS                       = "ZERO_BALANCE_IN_PERMANENT_ADDRESS"
-	NEED_MORE_TO_CREATE_DESTINATION                         = "NEED_MORE_TO_CREATE_DESTINATION"
-	NON_EXISTING_ACCOUNT_NAME                               = "NON_EXISTING_ACCOUNT_NAME"
-	ENV_UNSUPPORTED_ASSET                                   = "ENV_UNSUPPORTED_ASSET"
+	InsufficientFunds               TransactionSubStatus = "INSUFFICIENT_FUNDS"
+	AmountTooSmall                                       = "AMOUNT_TOO_SMALL"
+	UnsupportedAsset                                     = "UNSUPPORTED_ASSET"
+	UnauthorisedMissingPermission                        = "UNAUTHORISED__MISSING_PERMISSION"
+	InvalidSignature                                     = "INVALID_SIGNATURE"
+	ApiInvalidSignature                                  = "API_INVALID_SIGNATURE"
+	UnauthorisedMissingCredentials                       = "UNAUTHORISED__MISSING_CREDENTIALS"
+	UnauthorisedUser                                     = "UNAUTHORISED__USER"
+	UnauthorisedDevice                                   = "UNAUTHORISED__DEVICE"
+	InvalidUnmanagedWallet                               = "INVALID_UNMANAGED_WALLET"
+	InvalidExchangeAccount                               = "INVALID_EXCHANGE_ACCOUNT"
+	InsufficientFundsForFee                              = "INSUFFICIENT_FUNDS_FOR_FEE"
+	InvalidAddress                                       = "INVALID_ADDRESS"
+	WithdrawLimit                                        = "WITHDRAW_LIMIT"
+	ApiCallLimit                                         = "API_CALL_LIMIT"
+	AddressNotWhitelisted                                = "ADDRESS_NOT_WHITELISTED"
+	TIMEOUT                                              = "TIMEOUT"
+	ConnectivityError                                    = "CONNECTIVITY_ERROR"
+	ThirdPartyInternalError                              = "THIRD_PARTY_INTERNAL_ERROR"
+	CancelledExternally                                  = "CANCELLED_EXTERNALLY"
+	InvalidThirdPartyResponse                            = "INVALID_THIRD_PARTY_RESPONSE"
+	VaultWalletNotReady                                  = "VAULT_WALLET_NOT_READY"
+	MissingDepositAddress                                = "MISSING_DEPOSIT_ADDRESS"
+	OneTimeAddressDisabled                               = "ONE_TIME_ADDRESS_DISABLED"
+	InternalError                                        = "INTERNAL_ERROR"
+	UnknownError                                         = "UNKNOWN_ERROR"
+	AuthorizerNotFound                                   = "AUTHORIZER_NOT_FOUND"
+	InsufficientReservedFunding                          = "INSUFFICIENT_RESERVED_FUNDING"
+	ManualDepositAddressRequired                         = "MANUAL_DEPOSIT_ADDRESS_REQUIRED"
+	InvalidFee                                           = "INVALID_FEE"
+	ErrorUnsupportedTransactionType                      = "ERROR_UNSUPPORTED_TRANSACTION_TYPE"
+	UnsupportedOperation                                 = "UNSUPPORTED_OPERATION"
+	T3rdPartyProcessing                                  = "3RD_PARTY_PROCESSING"
+	PendingBlockchainConfirmations                       = "PENDING_BLOCKCHAIN_CONFIRMATIONS"
+	T3rdPartyConfirming                                  = "3RD_PARTY_CONFIRMING"
+	CONFIRMED                                            = "CONFIRMED"
+	T3rdPartyCompleted                                   = "3RD_PARTY_COMPLETED"
+	RejectedByUser                                       = "REJECTED_BY_USER"
+	CancelledByUser                                      = "CANCELLED_BY_USER"
+	T3rdPartyCancelled                                   = "3RD_PARTY_CANCELLED"
+	T3rdPartyRejected                                    = "3RD_PARTY_REJECTED"
+	AmlScreeningRejected                                 = "AML_SCREENING_REJECTED"
+	BlockedByPolicy                                      = "BLOCKED_BY_POLICY"
+	FailedAmlScreening                                   = "FAILED_AML_SCREENING"
+	PartiallyFailed                                      = "PARTIALLY_FAILED"
+	T3rdPartyFailed                                      = "3RD_PARTY_FAILED"
+	DroppedByBlockchain                                  = "DROPPED_BY_BLOCKCHAIN"
+	TooManyInputs                                        = "TOO_MANY_INPUTS"
+	SigningError                                         = "SIGNING_ERROR"
+	InvalidFeeParams                                     = "INVALID_FEE_PARAMS"
+	MissingTagOrMemo                                     = "MISSING_TAG_OR_MEMO"
+	GasLimitTooLow                                       = "GAS_LIMIT_TOO_LOW"
+	MaxFeeExceeded                                       = "MAX_FEE_EXCEEDED"
+	ActualFeeTooHigh                                     = "ACTUAL_FEE_TOO_HIGH"
+	InvalidContractCallData                              = "INVALID_CONTRACT_CALL_DATA"
+	InvalidNonceTooLow                                   = "INVALID_NONCE_TOO_LOW"
+	InvalidNonceTooHigh                                  = "INVALID_NONCE_TOO_HIGH"
+	InvalidNonceForRbf                                   = "INVALID_NONCE_FOR_RBF"
+	FailOnLowFee                                         = "FAIL_ON_LOW_FEE"
+	TooLongMempoolChain                                  = "TOO_LONG_MEMPOOL_CHAIN"
+	TxOutdated                                           = "TX_OUTDATED"
+	IncompleteUserSetup                                  = "INCOMPLETE_USER_SETUP"
+	SignerNotFound                                       = "SIGNER_NOT_FOUND"
+	InvalidTagOrMemo                                     = "INVALID_TAG_OR_MEMO"
+	ZeroBalanceInPermanentAddress                        = "ZERO_BALANCE_IN_PERMANENT_ADDRESS"
+	NeedMoreToCreateDestination                          = "NEED_MORE_TO_CREATE_DESTINATION"
+	NonExistingAccountName                               = "NON_EXISTING_ACCOUNT_NAME"
+	EnvUnsupportedAsset                                  = "ENV_UNSUPPORTED_ASSET"
 )
 
 type TransactionDetails struct {
@@ -181,7 +199,7 @@ type TransactionDetails struct {
 	Note                          string                   `json:"note"`                          // Customer note of the transaction
 	ExchangeTxId                  string                   `json:"exchangeTxId"`                  // If the transaction originated from an exchange, this is the exchange tx ID
 	FeeCurrency                   string                   `json:"feeCurrency"`                   // The asset which was taken to pay the fee (ETH for ERC-20 tokens, BTC for Tether Omni)
-	Operation                     TransactionOperation     `json:"operation"`                     // Default operation is "TRANSFER"
+	Operation                     string                   `json:"operation"`                     // Default operation is "TRANSFER"
 	AmlScreeningResult            AmlScreeningResult       `json:"amlScreeningResult"`            // The result of the AML screening
 	CustomerRefId                 string                   `json:"customerRefId"`                 // The ID for AML providers to associate the owner of funds with transactions
 	NumberOfConfirmations         int                      `json:"numberOfConfirmations"`         // The number of confirmations of the transaction. The number will increase until the transaction will be considered completed according to the confirmation policy.
@@ -268,10 +286,6 @@ type AmlScreeningResult struct {
 	Payload  string `json:"payload"`  // The response of the AML service provider
 }
 
-type TransactionOperation struct {
-	Operation string `json:"operation"` // [ TRANSFER, RAW, CONTRACT_CALL, MINT, BURN, SUPPLY_TO_COMPOUND, REDEEM_FROM_COMPOUND ]
-}
-
 type AmountInfo struct {
 	Amount          string `json:"amount"`          // If the transfer is a withdrawal from an exchange, the actual amount that was requested to be transferred. Otherwise, the requested amount
 	RequestedAmount string `json:"requestedAmount"` //The amount requested by the user
@@ -291,9 +305,8 @@ type CreateTransactionResponse struct {
 }
 
 type CreateVaultAssetResponse struct {
-	Id      string `json:"Id"`      // the Id of the asset
-	Address string `json:"address"` // Address of the asset in a Vault Account,
-	// for BTC/LTC the address is in segwit (Bech32) format, cash address format BCH
+	Id             string `json:"Id"`             // the Id of the asset
+	Address        string `json:"address"`        // Address of the asset in a Vault Account, for BTC/LTC the address is in segwit (Bech32) format, cash address format BCH
 	LegacyAddress  string `json:"legacyAddress"`  // legacy address format for BTC/LTC/BCH
 	Tag            string `json:"tag"`            // destination tag for XRP, memo for EOS/XLM
 	EosAccountName string `json:"eosAccountName"` // returned for EOS, the acct name.
