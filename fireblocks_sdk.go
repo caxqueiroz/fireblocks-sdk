@@ -5,11 +5,13 @@ import (
 	crand "crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gojek/heimdall/hystrix"
 	"github.com/golang-jwt/jwt"
 	"github.com/shopspring/decimal"
 	log "github.com/sirupsen/logrus"
@@ -81,6 +83,7 @@ func createHash(data string) string {
 }
 
 type SDK struct {
+	httpClient *hystrix.Client
 	apiBaseURL string
 	kto        *FbKeyMgmt
 }
@@ -90,36 +93,45 @@ func NewInstance(pk []byte, ak string, url string) *SDK {
 
 	s := new(SDK)
 	s.apiBaseURL = url
+
 	privateK, err := jwt.ParseRSAPrivateKeyFromPEM(pk)
 	if err != nil {
 		log.Error(err)
 	}
 
 	s.kto = NewInstanceKeyMgmt(privateK, ak)
+	s.httpClient = newCircuitBreakerHttpClient()
 	return s
+}
+
+func newCircuitBreakerHttpClient() *hystrix.Client {
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: false,
+	}
+	c := hystrix.NewClient()
+	return c
 }
 
 // getRequest - internal method to handle API call to Fireblocks
 func (s *SDK) getRequest(path string) (string, error) {
 
-	client := &http.Client{}
 	urlEndPoint := s.apiBaseURL + path
 	token, err := s.kto.createAndSignJWTToken(path, "")
 	if err != nil {
 		log.Error(err)
-		return fmt.Sprintf("{message: \"%s.\"}", "Error signing JWT token"), err
+		return fmt.Sprintf("{message: \"%s.\"}", "error signing JWT token"), err
 	}
 
 	request, err := http.NewRequest(http.MethodGet, urlEndPoint, nil)
 	if err != nil {
 		log.Error(err)
-		return fmt.Sprintf("{message: \"%s.\"}", "Error creating NewRequest"), err
+		return fmt.Sprintf("{message: \"%s.\"}", "error creating NewRequest"), err
 	}
 
 	request.Header.Add("X-API-Key", s.kto.apiKey)
 	request.Header.Add("Authorization", fmt.Sprintf("Bearer %v", token))
 
-	response, err := client.Do(request)
+	response, err := s.httpClient.Do(request)
 	if err != nil {
 		log.Error(err)
 		return "", err
@@ -133,12 +145,12 @@ func (s *SDK) getRequest(path string) (string, error) {
 
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Errorf("Error communicating with Fireblocks: %v", err)
+		log.Errorf("error communicating with fireblocks: %v", err)
 		return "", err
 	}
 
 	if response.StatusCode >= 300 {
-		errMsg := fmt.Sprintf("From Fireblocks server: %s \n %s", response.Status, string(data))
+		errMsg := fmt.Sprintf("fireblocks server: %s \n %s", response.Status, string(data))
 		log.Warning(errMsg)
 	}
 
@@ -147,7 +159,6 @@ func (s *SDK) getRequest(path string) (string, error) {
 
 func (s *SDK) changeRequest(path string, payload map[string]interface{}, idempotencyKey string, requestType string) (string, error) {
 
-	client := &http.Client{}
 	urlEndPoint := s.apiBaseURL + path
 	var stringPayload string
 	var marshalledPayload []byte
@@ -164,13 +175,13 @@ func (s *SDK) changeRequest(path string, payload map[string]interface{}, idempot
 	token, err := s.kto.createAndSignJWTToken(path, stringPayload)
 	if err != nil {
 		log.Error(err)
-		return fmt.Sprintf("{message: \"%s.\"}", "Error signing JWT token"), err
+		return fmt.Sprintf("{message: \"%s.\"}", "error signing JWT token"), err
 	}
 
 	request, err := http.NewRequest(requestType, urlEndPoint, bytes.NewBuffer(marshalledPayload))
 	if err != nil {
 		log.Error(err)
-		return fmt.Sprintf("{message: \"%s.\"}", "Error creating NewRequest"), err
+		return fmt.Sprintf("{message: \"%s.\"}", "error creating NewRequest"), err
 	}
 	request.Header.Add("X-API-Key", string(s.kto.apiKey))
 	request.Header.Add("Authorization", fmt.Sprintf("Bearer %v", token))
@@ -179,7 +190,7 @@ func (s *SDK) changeRequest(path string, payload map[string]interface{}, idempot
 	if len(idempotencyKey) > 0 {
 		request.Header.Add("Idempotency-Key", idempotencyKey)
 	}
-	response, err := client.Do(request)
+	response, err := s.httpClient.Do(request)
 	if err != nil {
 		log.Error(err)
 		return "", err
@@ -193,12 +204,12 @@ func (s *SDK) changeRequest(path string, payload map[string]interface{}, idempot
 
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Errorf("Error on communicating with Fireblocks: %v  \n data: %s", err, data)
+		log.Errorf("error on communicating with Fireblocks: %v  \n data: %s", err, data)
 		return "", err
 	}
 
 	if response.StatusCode >= 300 {
-		errMsg := fmt.Sprintf("From Fireblocks server: %s \n %s", response.Status, string(data))
+		errMsg := fmt.Sprintf("fireblocks server: %s \n %s", response.Status, string(data))
 		log.Warning(errMsg)
 	}
 
