@@ -328,6 +328,8 @@ type VaultAccountAssetAddress struct {
 	Tag           string `json:"tag"`            // Destination tag for XRP, used as memo for EOS/XLM, for Signet/SEN it is the Bank Transfer Description
 	Type          string `json:"type"`           // Address type
 	CustomerRefId string `json:" customerRefId"` // [optional] The ID for AML providers to associate the owner of funds with transactions
+	AddressFormat string `json:"addressFormat"`
+	EnterpriseAddress string `json:"enterpriseAddress"`
 
 }
 
