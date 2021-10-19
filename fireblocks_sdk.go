@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gojek/heimdall/hystrix"
+	"github.com/gojek/heimdall/v7/hystrix"
 	"github.com/golang-jwt/jwt"
 	"github.com/shopspring/decimal"
 	log "github.com/sirupsen/logrus"
@@ -108,7 +108,10 @@ func newCircuitBreakerHttpClient() *hystrix.Client {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: false,
 	}
-	c := hystrix.NewClient()
+	c := hystrix.NewClient(hystrix.WithFallbackFunc(func(err error) error {
+		log.Errorf("no fallback func implemented: %s", err)
+		return err
+	}))
 	return c
 }
 
@@ -157,28 +160,16 @@ func (s *SDK) getRequest(path string) (string, error) {
 	return string(data), err
 }
 
-func (s *SDK) changeRequest(path string, payload map[string]interface{}, idempotencyKey string, requestType string) (string, error) {
+func (s *SDK) changeRequest(path string, payload []byte, idempotencyKey string, requestType string) (string, error) {
 
 	urlEndPoint := s.apiBaseURL + path
-	var stringPayload string
-	var marshalledPayload []byte
-
-	if payload != nil {
-		var err error
-		marshalledPayload, err = json.Marshal(payload)
-		if err != nil {
-			log.Errorf("error processing json payload: %v", err)
-		}
-		stringPayload = string(marshalledPayload)
-	}
-
-	token, err := s.kto.createAndSignJWTToken(path, stringPayload)
+	token, err := s.kto.createAndSignJWTToken(path, string(payload))
 	if err != nil {
 		log.Error(err)
 		return fmt.Sprintf("{message: \"%s.\"}", "error signing JWT token"), err
 	}
 
-	request, err := http.NewRequest(requestType, urlEndPoint, bytes.NewBuffer(marshalledPayload))
+	request, err := http.NewRequest(requestType, urlEndPoint, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Error(err)
 		return fmt.Sprintf("{message: \"%s.\"}", "error creating NewRequest"), err
@@ -371,8 +362,12 @@ func (s *SDK) GenerateNewAddress(vaultAccountID string, assetID string, descript
 	if len(customerRefID) > 0 {
 		payload["customerRefId"] = customerRefID
 	}
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return CreateAddressResponse{}, err
+	}
 
-	returnedData, err := s.changeRequest(query, payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest(query, marshalled, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
 		log.Errorf("returned payload: %s", returnedData)
@@ -404,7 +399,11 @@ func (s *SDK) SetAddressDescription(vaultAccountID string, assetID string, descr
 	} else {
 		query = fmt.Sprintf("/v1/vault/accounts/%s/%s/addresses/%s", vaultAccountID, assetID, address)
 	}
-	return s.changeRequest(query, payload, "", http.MethodPut)
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+	return s.changeRequest(query, marshalled, "", http.MethodPut)
 }
 
 // GetNetworkConnections - Gets all network connections for your tenant
@@ -484,8 +483,14 @@ func (s *SDK) SetCustomerRefId(vaultAccountId string, customerRefId string, idem
 	payload := map[string]interface{}{
 		"customerRefId": customerRefId,
 	}
+
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
 	query := fmt.Sprintf("/v1/vault/accounts/%s", vaultAccountId)
-	_, err := s.changeRequest(query, payload, idempotencyKey, http.MethodPost)
+	_, err = s.changeRequest(query, marshalled, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -508,14 +513,16 @@ func (s *SDK) CreateVaultAccount(name string, hiddenOnUI bool, customerRefID str
 	if len(customerRefID) > 0 {
 		payload["customerRefId"] = customerRefID
 	}
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return VaultAccount{}, err
+	}
 
-	var vaultAccount VaultAccount
-
-	returnedData, err := s.changeRequest("/v1/vault/accounts", payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest("/v1/vault/accounts", marshalled, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
 	}
-
+	var vaultAccount VaultAccount
 	err = json.Unmarshal([]byte(returnedData), &vaultAccount)
 	if err != nil {
 		log.Error(err)
@@ -564,11 +571,17 @@ func (s *SDK) CreateExternalWallet(name string, customerRefId string, idempotenc
 	payload := map[string]interface{}{
 		"name": name,
 	}
+
 	if len(customerRefId) > 0 {
 		payload["customerRefId"] = customerRefId
 	}
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		log.Error(err)
+		return ExternalWallet{}, err
+	}
 
-	returnedData, err := s.changeRequest("/v1/external_wallets", payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest("/v1/external_wallets", marshalled, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
 		return ExternalWallet{}, err
@@ -596,8 +609,12 @@ func (s *SDK) CreateExternalWalletAsset(walletId string, assetId string, address
 	if len(tag) > 0 {
 		payload["tag"] = tag
 	}
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return ExternalWalletAsset{}, err
+	}
 
-	returnedData, err := s.changeRequest(cmd, payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest(cmd, marshalled, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
 		return ExternalWalletAsset{}, err
@@ -622,8 +639,12 @@ func (s *SDK) CreateInternalWallet(name string, customerRefId string, idempotenc
 		"name":          name,
 		"customerRefId": customerRefId,
 	}
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return UnmanagedWallet{}, err
+	}
 
-	returnedData, err := s.changeRequest("/v1/internal_wallets", payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest("/v1/internal_wallets", marshalled, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
 		return UnmanagedWallet{}, err
@@ -649,8 +670,12 @@ func (s *SDK) CreateInternalWalletAsset(walletId string, assetId string, address
 	if len(tag) > 0 {
 		payload["tag"] = tag
 	}
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return WalletAsset{}, err
+	}
 
-	returnedData, err := s.changeRequest(cmd, payload, idempotencyKey, http.MethodPost)
+	returnedData, err := s.changeRequest(cmd, marshalled, idempotencyKey, http.MethodPost)
 	if err != nil {
 		log.Error(err)
 		return WalletAsset{}, err
@@ -678,7 +703,12 @@ func (s *SDK) GetEstimateTxFee(assetId string, amount string, source TransferPee
 		"operation":   operation,
 	}
 
-	returnedData, err := s.changeRequest("/v1/transactions/estimate_fee", payload, "", http.MethodPost)
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return EstimatedTransactionFeeResponse{}, err
+	}
+
+	returnedData, err := s.changeRequest("/v1/transactions/estimate_fee", marshalled, "", http.MethodPost)
 	if err != nil {
 		log.Error(err)
 		return EstimatedTransactionFeeResponse{}, err
@@ -710,84 +740,79 @@ func (s *SDK) CreateTransaction(assetId string, amount decimal.Decimal, source T
 
 ) (CreateTransactionResponse, error) {
 
-	payload := map[string]interface{}{
-		"assetId":       assetId,
-		"amount":        amount,
-		"source":        source,
-		"destination":   destination,
-		"waitForStatus": waitForStatus,
-		"operation":     txType,
+	payload := CreateTransactionPayload{
+		AssetId:            assetId,
+		Source:             source,
+		Destination:        destination,
+		Amount:             amount.String(),
+		TreatAsGrossAmount: false,
+		FailOnLowFee:       false,
+		Operation:          string(txType),
+		WaitForStatus:      waitForStatus,
 	}
 
 	if fee.IsPositive() {
-		payload["fee"] = fee
+		payload.Fee = fee.String()
 	}
 
 	if len(feeLevel) > 0 {
-		payload["feeLevel"] = feeLevel
+		payload.FeeLevel = string(feeLevel)
 	}
+
 	if len(note) > 0 {
-		payload["note"] = note
+		payload.Note = note
 	}
+
 	if len(maxFee) > 0 {
-		payload["maxFee"] = maxFee
+		payload.MaxFee = maxFee
 	}
 
 	if gasPrice.IsPositive() {
-		payload["gasPrice"] = gasPrice
+		payload.GasPrice = gasPrice.String()
 	}
 
 	if gasLimit.IsPositive() {
-		payload["gasLimit"] = gasLimit
+		payload.GasLimit = gasLimit.String()
 	}
 
 	if len(cpuStaking) > 0 {
-		payload["cpuStaking"] = cpuStaking
+		payload.CpuStaking = cpuStaking
 	}
 
 	if len(networkStaking) > 0 {
-		payload["networkStaking"] = networkStaking
+		payload.NetworkStaking = networkStaking
 	}
 
 	if len(autoStaking) > 0 {
-		payload["autoStaking"] = autoStaking
+		payload.AutoStaking = autoStaking
 	}
 	if len(customerRefId) > 0 {
-		payload["customerRefId"] = customerRefId
+		payload.CustomerRefId = customerRefId
 	}
 
 	if len(replaceTxByHash) > 0 {
-		payload["replaceTxByHash"] = replaceTxByHash
+		payload.ReplacedTxHash = replaceTxByHash
 	}
 
 	if extraParams != (ExtraParameters{}) {
-		payload["extraParameters"] = extraParams
+		payload.ExtraParameters = extraParams
 	}
 
 	if len(destinations) > 0 {
-		var arr []string
-		for _, d := range destinations {
-			jsonItem, err := json.Marshal(d)
-			if err != nil {
-				log.Errorf("Error processing destinations :: createTransaction : %v", err)
-			} else {
-				arr = append(arr, string(jsonItem))
-			}
-		}
-		jsonArray, err := json.Marshal(arr)
-		if err != nil {
-			log.Errorf("error processing the jsonArray :: createTransaction: %v", err)
-		} else {
-			payload["destinations"] = string(jsonArray)
-		}
+		payload.Destinations = destinations
 	}
 
 	return s.CreateTransactionWithPayload(payload, idempotencyKey)
 }
 
-func (s *SDK) CreateTransactionWithPayload(payload map[string]interface{}, idempotencyKey string) (CreateTransactionResponse, error) {
+func (s *SDK) CreateTransactionWithPayload(payload CreateTransactionPayload, idempotencyKey string) (CreateTransactionResponse, error) {
 
-	returnedData, err := s.changeRequest("/v1/transactions", payload, idempotencyKey, http.MethodPost)
+	marshalled, err := json.Marshal(payload)
+	if err != nil {
+		return CreateTransactionResponse{}, err
+	}
+	returnedData, err := s.changeRequest("/v1/transactions", marshalled, idempotencyKey, http.MethodPost)
+
 	if err != nil {
 		log.Error(err)
 	}
@@ -796,20 +821,15 @@ func (s *SDK) CreateTransactionWithPayload(payload map[string]interface{}, idemp
 	err = json.Unmarshal([]byte(returnedData), &transactionResponse)
 	if err != nil {
 		log.Error(err)
+		return CreateTransactionResponse{}, errors.New(returnedData)
 	}
-	if len(transactionResponse.Id) == 0 {
-		return transactionResponse, errors.New(returnedData)
-	}
+
 	return transactionResponse, err
 }
 
-func (s *SDK) GetVaultAssetsBalance(accountNamePrefix string, accountNameSuffix string) (
-	string,
-	error,
-) {
+func (s *SDK) GetVaultAssetsBalance(accountNamePrefix string, accountNameSuffix string) (string, error) {
 
 	params := url.Values{}
-
 	if len(accountNamePrefix) > 0 {
 		params.Add("accountNamePrefix", accountNamePrefix)
 	}

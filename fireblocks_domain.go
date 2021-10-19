@@ -4,6 +4,33 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type CreateTransactionPayload struct {
+	AssetId            string                        `json:"assetId"`
+	Source             TransferPeerPath              `json:"source"`                       // source of the transaction
+	Destination        DestinationTransferPeerPath   `json:"destination"`                  // Destination of the transaction
+	Destinations       []DestinationTransferPeerPath `json:"destinations,omitempty"`       // Destination of the transaction
+	Amount             string                        `json:"amount"`                       // If the transfer is a withdrawal from an exchange, the actual amount that was requested to be transferred. Otherwise, the requested amount
+	Fee                string                        `json:"fee,omitempty"`                // The total fee deducted by the exchange from the actual requested amount (serviceFee = amount - netAmount)
+	TreatAsGrossAmount bool                          `json:"treatAsGrossAmount,omitempty"` // For outgoing transactions, if true, the network fee is deducted from the requested amount
+	FailOnLowFee       bool                          `json:"failOnLowFee,omitempty"`
+	NetworkFee         string                        `json:"networkFee,omitempty"` //The fee paid to the network
+	PriorityFee        string                        `json:"priorityFee,omitempty"`
+	FeeLevel           string                        `json:"feeLevel,omitempty"`
+	MaxFee             string                        `json:"maxFee,omitempty"`
+	Note               string                        `json:"note,omitempty"`            // Customer note of the transaction
+	Operation          string                        `json:"operation"`                 // Default operation is "TRANSFER"
+	CustomerRefId      string                        `json:"customerRefId,omitempty"`   // The ID for AML providers to associate the owner of funds with transactions
+	ReplacedTxHash     string                        `json:"replacedTxHash,omitempty"`  //
+	ExtraParameters    ExtraParameters               `json:"extraParameters,omitempty"` // Protocol / operation specific parameters.
+	ExternalTxId       string                        `json:"externalTxId,omitempty"`
+	WaitForStatus      bool                          `json:"waitForStatus,omitempty"`
+	GasPrice           string                        `json:"gasPrice,omitempty"`
+	GasLimit           string                        `json:"gasLimit,omitempty"`
+	CpuStaking         string                        `json:"cpuStaking,omitempty"`
+	NetworkStaking     string                        `json:"networkStaking,omitempty"`
+	AutoStaking        string                        `json:"autoStaking,omitempty"`
+}
+
 type ExternalWalletAsset struct {
 	Id             string                    `json:"id"`             // the id of the asset
 	Status         ConfigChangeRequestStatus `json:"status"`         // Status of the External Wallet
@@ -321,16 +348,15 @@ type AssetTypeResponse struct {
 }
 
 type VaultAccountAssetAddress struct {
-	AssetId       string `json:"assetId"`        // The ID of the asset
-	Address       string `json:"address"`        // Address of the asset in a Vault Account, for BTC/LTC the address is in Segwit (Bech32) format, for BCH cash format
-	LegacyAddress string `json:"legacyAddress"`  // For BTC/LTC/BCH the legacy format address
-	Description   string `json:"description"`    // Description of the address
-	Tag           string `json:"tag"`            // Destination tag for XRP, used as memo for EOS/XLM, for Signet/SEN it is the Bank Transfer Description
-	Type          string `json:"type"`           // Address type
-	CustomerRefId string `json:" customerRefId"` // [optional] The ID for AML providers to associate the owner of funds with transactions
-	AddressFormat string `json:"addressFormat"`
+	AssetId           string `json:"assetId"`        // The ID of the asset
+	Address           string `json:"address"`        // Address of the asset in a Vault Account, for BTC/LTC the address is in Segwit (Bech32) format, for BCH cash format
+	LegacyAddress     string `json:"legacyAddress"`  // For BTC/LTC/BCH the legacy format address
+	Description       string `json:"description"`    // Description of the address
+	Tag               string `json:"tag"`            // Destination tag for XRP, used as memo for EOS/XLM, for Signet/SEN it is the Bank Transfer Description
+	Type              string `json:"type"`           // Address type
+	CustomerRefId     string `json:" customerRefId"` // [optional] The ID for AML providers to associate the owner of funds with transactions
+	AddressFormat     string `json:"addressFormat"`
 	EnterpriseAddress string `json:"enterpriseAddress"`
-
 }
 
 type UnsignedMessage struct {
