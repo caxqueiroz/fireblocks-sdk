@@ -1,3 +1,3 @@
-# fireblocks-sdk
+# fireblocks-sdk-go
 
-A Go wrapper on the [Fireblocks API](https://docs.fireblocks.com/api)
+A Golang wrapper for the [Fireblocks API](https://docs.fireblocks.com/api)
