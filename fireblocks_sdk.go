@@ -499,6 +499,17 @@ func (s *SDK) SetCustomerRefId(vaultAccountId string, customerRefId string, idem
 	return nil
 
 }
+ //POST /v1/webhooks/resend
+
+func (s *SDK) ResendFailedWebhookEvents() error {
+
+	_, err := s.changeRequest("/v1/webhooks/resend", nil, "", http.MethodPost)
+	if err != nil {
+		log.Error(err)
+	}
+	return err
+
+}
 
 // CreateVaultAccount
 // name - vaultaccount name - usually we use as a join of userid + product_id (XXXX_YYYY)
