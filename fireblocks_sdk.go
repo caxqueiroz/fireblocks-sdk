@@ -39,6 +39,8 @@ func NewInstanceKeyMgmt(pk *rsa.PrivateKey, apiKey string) *FbKeyMgmt {
 	return k
 }
 
+const timeout = 5 * time.Millisecond
+
 type secrets struct{}
 
 func (s secrets) Seed(seed int64) {}
@@ -89,29 +91,35 @@ type SDK struct {
 }
 
 // NewInstance - create new type to handle Fireblocks API requests
-func NewInstance(pk []byte, ak string, url string) *SDK {
+func NewInstance(pk []byte, ak string, url string, t time.Duration) *SDK {
+
+	if t == time.Duration(0) {
+		// use default
+		t = timeout
+	}
 
 	s := new(SDK)
 	s.apiBaseURL = url
-
 	privateK, err := jwt.ParseRSAPrivateKeyFromPEM(pk)
 	if err != nil {
 		log.Error(err)
 	}
 
 	s.kto = NewInstanceKeyMgmt(privateK, ak)
-	s.httpClient = newCircuitBreakerHttpClient()
+	s.httpClient = newCircuitBreakerHttpClient(t)
 	return s
 }
 
-func newCircuitBreakerHttpClient() *hystrix.Client {
+func newCircuitBreakerHttpClient(t time.Duration) *hystrix.Client {
+
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: false,
 	}
-	c := hystrix.NewClient(hystrix.WithFallbackFunc(func(err error) error {
-		log.Errorf("no fallback func implemented: %s", err)
-		return err
-	}))
+	c := hystrix.NewClient(hystrix.WithHTTPTimeout(t),
+		hystrix.WithFallbackFunc(func(err error) error {
+			log.Errorf("no fallback func implemented: %s", err)
+			return err
+		}))
 	return c
 }
 
@@ -499,7 +507,8 @@ func (s *SDK) SetCustomerRefId(vaultAccountId string, customerRefId string, idem
 	return nil
 
 }
- //POST /v1/webhooks/resend
+
+//POST /v1/webhooks/resend
 
 func (s *SDK) ResendFailedWebhookEvents() error {
 
